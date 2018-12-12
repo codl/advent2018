@@ -1,5 +1,33 @@
 import re
 
+class LLinkedList(object):
+    def __init__(self, value, left=None, right=None):
+        self.value = value
+        self.left = left or self
+        self.right = right or self
+
+    def insert(self, value):
+        other = LLinkedList(value, self.left, self)
+        self.left.right = other
+        self.left = other
+        return other
+
+    def remove(self):
+        self.right.left = self.left
+        self.left.right = self.right
+        return self.right
+
+    def move(self, count):
+        if(count == 0):
+            return self
+        elif(count > 0):
+            return self.right.move(count-1)
+        elif(count < 0):
+            return self.left.move(count+1)
+
+
+
+
 def run(_in):
     results = list()
     for line in _in.split('\n'):
@@ -8,35 +36,25 @@ def run(_in):
         marble_limit = int(res[2])
 
         player_scores = [0] * player_count
-        marbles = [0]
-        cursor = 0
+        marbles = LLinkedList(0)
 
         value = 0
         player = -1
 
-        #for marble_limit2 in (marble_limit, marble_limit * 100):
+        for marble_limit2 in (marble_limit, marble_limit * 100):
 
             while value < marble_limit2:
                 value += 1
                 player = (player + 1) % player_count
                 if value % 23 == 0:
                     player_scores[player] += value
-                    cursor = (cursor - 7) % len(marbles)
-                    player_scores[player] += marbles.pop(cursor)
-                    cursor = cursor % len(marbles)
+                    marbles = marbles.move(-7)
+                    player_scores[player] += marbles.value
+                    marbles = marbles.remove()
                 else:
-                    cursor = (cursor + 2) % len(marbles)
-                    marbles.insert(cursor, value)
+                    marbles = marbles.move(2)
+                    marbles = marbles.insert(value)
 
-                if False:
-                    print('[{}]'.format(player), end=' ')
-                    for i in range(len(marbles)):
-                        marble = marbles[i]
-                        if i == cursor:
-                            print('*{}'.format(marble), end='')
-                        else:
-                            print(' {}'.format(marble), end='')
-                    print('')
 
             results.append(max(player_scores))
 
@@ -47,7 +65,7 @@ def run(_in):
 if __name__ == '__main__':
     import sys
     import os
-    day = os.path.basename(sys.argv[0]).split('.')[0]
+    day = '09'
     with open(day + '.example.input') as f:
         print(run(f.read().strip()))
     with open(day + '.input') as f:
